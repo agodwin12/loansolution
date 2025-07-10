@@ -17,4 +17,10 @@ router.get('/user/:userId/recent', loanController.getUserRecentLoans);
 
 router.get('/user/:userId', loanController.getUserLoans);
 
+//pay
+router.post('/:loanId/pay', loanController.payLoan);
+
+router.get('/user/:userId/approved', loanController.getUserApprovedLoans);
+
+
 module.exports = router;

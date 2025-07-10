@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const loanRoutes = require('./routes/loanRoutes');
 const adminRoutes = require("./routes/adminRoutes");
 const adminLoanRoutes = require('./routes/adminLoanRoutes');
+const withdrawalRoutes = require('./routes/withdrawalRoutes');
 const app = express();
 
 // Middlewares
@@ -19,6 +20,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/loans', loanRoutes);
 app.use("/api/admin", adminRoutes);
 app.use('/api/admin', adminLoanRoutes);
+app.use('/api/wallets', require('./routes/walletRoutes'));
+app.use('/api/withdraw', withdrawalRoutes);
+
 // Sync database and start server
 db.sequelize.sync({ alter: true }) // you can use alter: true in development
     .then(() => {

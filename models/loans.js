@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
             reason: DataTypes.TEXT,
             return_date: DataTypes.DATE,
             status: {
-                type: DataTypes.ENUM("pending", "processing", "approved", "rejected"),
+                type: DataTypes.ENUM("pending", "processing", "approved", "paid","rejected"),
                 defaultValue: "pending",
             },            rejection_reason: DataTypes.TEXT,
         },
