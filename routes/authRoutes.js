@@ -17,4 +17,11 @@ router.post('/request-password-reset', authController.requestPasswordReset);
 router.post('/reset-password', authController.resetPassword);
 
 
+// PUT /api/user/:id (update profile)
+router.put("/user/:id", upload.single("profile_image"), authController.updateProfile);
+
+
+router.get("/user/:id/documents", authController.getUserDocuments);
+
+
 module.exports = router;

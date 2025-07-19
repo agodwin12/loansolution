@@ -234,3 +234,58 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Reset failed.', error: error.message });
     }
 };
+
+
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const { name, phone } = req.body;
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.name = name || user.name;
+        user.phone = phone || user.phone;
+
+        if (req.file) {
+            user.profile_image_url = req.file.filename;
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            user,
+        });
+    } catch (error) {
+        console.error("❌ Error updating profile:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+
+
+exports.getUserDocuments = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const user = await User.findByPk(userId, {
+            attributes: ['id_card_front_url', 'id_card_back_url']
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        return res.json({
+            id_card_front_url: user.id_card_front_url ? `/uploads/${user.id_card_front_url}` : null,
+            id_card_back_url: user.id_card_back_url ? `/uploads/${user.id_card_back_url}` : null
+        });
+    } catch (error) {
+        console.error("❌ Error fetching user documents:", error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
