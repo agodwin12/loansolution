@@ -1,6 +1,5 @@
 const axios = require('axios');
 const { Otp } = require('../models');
-const logger = require('../utils/logger');
 
 const OTP_EXPIRY_TIME = 5 * 60 * 1000;
 
@@ -41,7 +40,7 @@ async function sendOtpViaTechsoft(phone, code, type) {
         message: `Your PROXYM TRACKING OTP is: ${code}. Valid for 5 minutes.`,
     };
 
-    logger.info(`📤 [OtpService] Sending ${type} OTP SMS to ${phoneWithoutPlus}`);
+    console.log(`📤 [OtpService] Sending ${type} OTP SMS to ${phoneWithoutPlus}`);
 
     try {
         const response = await axios.post(apiUrl, payload, {
@@ -60,7 +59,7 @@ async function sendOtpViaTechsoft(phone, code, type) {
             };
         }
 
-        logger.error(`❌ [OtpService] SMS API error ${response.status}:`, response.data);
+        console.error(`❌ [OtpService] SMS API error ${response.status}:`, response.data);
 
         return {
             success: false,
@@ -70,7 +69,7 @@ async function sendOtpViaTechsoft(phone, code, type) {
             },
         };
     } catch (err) {
-        logger.error('❌ [OtpService] SMS request failed:', err.message);
+        console.error('❌ [OtpService] SMS request failed:', err.message);
 
         return {
             success: false,
@@ -102,7 +101,7 @@ async function createAndSendOtp(user, type, transaction) {
         throw new Error('Failed to send OTP SMS');
     }
 
-    logger.info(`✅ [OtpService] OTP sent to user ${user.id}`);
+    console.log(`✅ [OtpService] OTP sent to user ${user.id}`);
 
     return code;
 }
