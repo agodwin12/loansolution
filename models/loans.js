@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
             },            rejection_reason: DataTypes.TEXT,
         },
         {
-            tableName: "Loans",
+            tableName: "loans",
             timestamps: true,
             underscored: true,
         }
