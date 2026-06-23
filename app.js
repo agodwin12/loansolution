@@ -25,11 +25,15 @@ app.use('/api/wallets', require('./routes/walletRoutes'));
 app.use('/api/withdraw', withdrawalRoutes);
 
 // Sync database and start server
-db.sequelize.sync({ alter: true }) // you can use alter: true in development
+// Sync database and start server
+db.sequelize.sync({ alter: true })
     .then(() => {
         console.log('✅ Database synced!');
-        app.listen(3000, () => {
-            console.log('✅ Server running on http://localhost:3000');
+
+        const PORT = process.env.PORT || 7050;
+
+        app.listen(PORT, () => {
+            console.log(`✅ Server running on http://localhost:${PORT}`);
         });
     })
     .catch((err) => {
