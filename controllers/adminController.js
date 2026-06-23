@@ -2,7 +2,7 @@
 const { Op } = require("sequelize");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { Admin, User, Loan } = require("../models");
+const { Admin, User, Loan, Withdrawal } = require("../models");
 
 exports.registerAdmin = async (req, res) => {
     try {
@@ -289,5 +289,58 @@ exports.getDashboardStats = async (req, res) => {
     } catch (e) {
         console.error("❌ Error fetching dashboard stats:", e);
         return res.status(500).json({ message: "Error fetching dashboard stats." });
+    }
+};
+
+
+
+exports.getRecentActivity = async (req, res) => {
+    try {
+        console.log("📥 Fetching recent activity...");
+
+        const latestUser = await User.findOne({
+            order: [['createdAt', 'DESC']],
+            attributes: ['id', 'name', 'email', 'phone', 'createdAt'],
+        });
+
+        console.log("👤 Latest Registered User:", latestUser);
+
+        const latestApprovedLoan = await Loan.findOne({
+            where: { status: 'approved' },
+            order: [['updated_at', 'DESC']],
+            attributes: ['id', 'amount', 'wallet_id', 'updated_at'],
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['name'],
+                },
+            ],
+        });
+
+        console.log("💰 Latest Approved Loan:", latestApprovedLoan);
+
+        const latestWithdrawal = await Withdrawal.findOne({
+            order: [['created_at', 'DESC']],
+            attributes: ['id', 'amount', 'wallet_id', 'created_at'],
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['name'],
+                },
+            ],
+        });
+
+        console.log("🏧 Latest Withdrawal:", latestWithdrawal);
+
+        return res.status(200).json({
+            latestUser,
+            latestApprovedLoan,
+            latestWithdrawal,
+        });
+    } catch (err) {
+        console.error("❌ Error fetching recent activity:", err);
+        return res.status(500).json({ message: 'Server error' });
     }
 };

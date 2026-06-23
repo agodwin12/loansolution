@@ -1,8 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User, Wallet, Otp, sequelize, Admin } = require('../models');
-const { createAndSendOtp } = require('../utils/otpService');
-
+const { User, Wallet,  sequelize, Admin } = require('../models');
+const { createAndSendOtp, verifyOtp } = require('../utils/otpService');
 function generateWalletId() {
     return 'DL-' + Math.floor(100000 + Math.random() * 900000);
 }
@@ -15,10 +14,14 @@ exports.signup = async (req, res) => {
         console.log('Request Body:', req.body);
         console.log('Files:', req.files);
 
-        const { name, email, phone, password } = req.body;
+        const { name, email, phone, password, fcm_token } = req.body;
+
+        if (!name || !email || !phone || !password) {
+            return res.status(400).json({ message: "All fields are required." });
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        console.log('Password hashed.');
+        console.log('✅ Password hashed.');
 
         // Create the user
         const newUser = await User.create({
@@ -26,12 +29,13 @@ exports.signup = async (req, res) => {
             email,
             phone,
             password_hash: hashedPassword,
+            fcm_token: fcm_token || null, // ✅ Save FCM token
             profile_image_url: req.files?.profile?.[0]?.filename || null,
             id_card_front_url: req.files?.id_front?.[0]?.filename || null,
             id_card_back_url: req.files?.id_back?.[0]?.filename || null,
         }, { transaction: t });
 
-        console.log('New user created:', newUser.id);
+        console.log('✅ New user created:', newUser.id);
 
         // Create a wallet for the user
         const walletId = generateWalletId();
@@ -41,13 +45,13 @@ exports.signup = async (req, res) => {
             balance: 0.0,
         }, { transaction: t });
 
-        console.log('Wallet created for user:', newWallet.wallet_id);
+        console.log('✅ Wallet created for user:', newWallet.wallet_id);
 
         // Send OTP
         const otpCode = await createAndSendOtp(newUser, 'phone', t);
-        console.log(`OTP ${otpCode} sent to user phone ${phone}`);
+        console.log(`✅ OTP ${otpCode} sent to user phone ${phone}`);
 
-        // All good → commit
+        // Commit transaction
         await t.commit();
 
         return res.status(201).json({
@@ -57,11 +61,12 @@ exports.signup = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('SIGNUP ERROR:', error);
+        console.error('❌ SIGNUP ERROR:', error);
         await t.rollback();
         return res.status(500).json({ message: 'Signup failed', error: error.message });
     }
 };
+
 
 exports.login = async (req, res) => {
     const { loginType, emailOrPhone, password } = req.body;
@@ -151,6 +156,61 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.googleLogin = async (req, res) => {
+    try {
+        console.log("🔍 [GoogleLogin] Request body:", req.body);
+
+        const { email, full_name, profile_image } = req.body;
+
+        if (!email || !full_name) {
+            console.log("❌ Missing email or full_name");
+            return res.status(400).json({ message: "Missing email or name" });
+        }
+
+        let user = await User.findOne({ where: { email } });
+        console.log(user ? "✅ User found" : "ℹ️ No user found, creating new one...");
+
+        if (!user) {
+            user = await User.create({
+                name: full_name,
+                email,
+                profile_image_url: profile_image,
+                password_hash: null,
+            });
+            console.log("✅ New user created:", user.dataValues);
+
+            await Wallet.create({
+                user_id: user.id,
+                balance: 0,
+            });
+            console.log("✅ Wallet created for new user");
+        }
+
+        const wallet = await Wallet.findOne({ where: { user_id: user.id } });
+        console.log("💼 Wallet data:", wallet ? wallet.dataValues : null);
+
+        const token = jwt.sign(
+            { id: user.id },
+            process.env.JWT_SECRET || "secret",
+            { expiresIn: "7d" }
+        );
+        console.log("🔐 JWT token generated");
+
+        return res.status(200).json({
+            message: "Google login successful",
+            token,
+            user,
+            type: "user",
+            wallet,
+        });
+    } catch (error) {
+        console.error("❌ Google login error:", error);
+        return res.status(500).json({
+            message: "Server error during Google login",
+            error: error.message,
+        });
+    }
+};
 
 
 exports.verifyOtp = async (req, res) => {
@@ -289,3 +349,28 @@ exports.getUserDocuments = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
+
+
+exports.updateFcmToken = async (req, res) => {
+    try {
+        const { user_id, fcm_token } = req.body;
+
+        if (!user_id || !fcm_token) {
+            return res.status(400).json({ message: "Missing user_id or fcm_token" });
+        }
+
+        const user = await User.findByPk(user_id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.fcm_token = fcm_token;
+        await user.save();
+
+        return res.status(200).json({ message: "FCM token updated successfully" });
+    } catch (error) {
+        console.error("❌ Error updating FCM token:", error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+

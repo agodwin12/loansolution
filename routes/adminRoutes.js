@@ -44,4 +44,7 @@ router.get("/dashboard-stats", adminController.getDashboardStats);
 router.get('/dashboard-stats', adminController.getDashboardStats);
 
 
+router.get('/recent-activity', adminController.getRecentActivity);
+
+
 module.exports = router;

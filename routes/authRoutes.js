@@ -24,4 +24,9 @@ router.put("/user/:id", upload.single("profile_image"), authController.updatePro
 router.get("/user/:id/documents", authController.getUserDocuments);
 
 
+router.post("/google-login", authController.googleLogin);
+
+router.post('/update-fcm-token', authController.updateFcmToken);
+
+
 module.exports = router;
