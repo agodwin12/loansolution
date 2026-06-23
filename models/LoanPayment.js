@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     );
 
     LoanPayment.associate = function(models) {
-        LoanPayment.belongsTo(models.Loan, {
+        LoanPayment.belongsTo(models.loan, {
             foreignKey: "loan_id",
             as: "loan",
         });
