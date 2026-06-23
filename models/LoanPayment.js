@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 references: {
-                    model: "Loans",
+                    model: "loans",
                     key: "id",
                 },
                 onDelete: "CASCADE",
@@ -35,8 +35,8 @@ module.exports = (sequelize, DataTypes) => {
         }
     );
 
-    LoanPayment.associate = function(models) {
-        LoanPayment.belongsTo(models.loan, {
+    LoanPayment.associate = function (models) {
+        LoanPayment.belongsTo(models.Loan, {
             foreignKey: "loan_id",
             as: "loan",
         });
