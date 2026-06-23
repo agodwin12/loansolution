@@ -26,9 +26,9 @@ app.use('/api/withdraw', withdrawalRoutes);
 
 // Sync database and start server
 // Sync database and start server
-db.sequelize.sync({ alter: true })
+db.sequelize.authenticate()
     .then(() => {
-        console.log('✅ Database synced!');
+        console.log('✅ Database connected!');
 
         const PORT = process.env.PORT || 7050;
 
